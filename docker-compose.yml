@@ -1,1 +1,65 @@
+version: '3.8'
 
+services:
+  # --- Branch 1: Tucson ---
+  tucson:
+    build: ./services/responder
+    container_name: responder_tuc
+    restart: unless-stopped
+    environment:
+      - BRANCH_NAME=tuc
+      - ADMIN_DASHBOARD_URL=http://admin:5000
+      - PUBLIC_URL=https://tuc.axiom-emergencies.com
+    networks:
+      - twilio_net
+
+  # --- Branch 2: Pocatello ---
+  pocatello:
+    build: ./services/responder
+    container_name: responder_poc
+    restart: unless-stopped
+    environment:
+      - BRANCH_NAME=poc
+      - ADMIN_DASHBOARD_URL=http://admin:5000
+      - PUBLIC_URL=https://poc.axiom-emergencies.com
+    networks:
+      - twilio_net
+
+  # --- Branch 3: Rexburg ---
+  rexburg:
+    build: ./services/responder
+    container_name: responder_rex
+    restart: unless-stopped
+    environment:
+      - BRANCH_NAME=rex
+      - ADMIN_DASHBOARD_URL=http://admin:5000
+      - PUBLIC_URL=https://rex.axiom-emergencies.com
+    networks:
+      - twilio_net
+
+  # --- Admin Dashboard ---
+  admin:
+    build: ./services/admin
+    container_name: responder_admin
+    restart: unless-stopped
+    volumes:
+      - admin_data:/data
+    networks:
+      - twilio_net
+
+  # --- Cloudflare Tunnel ---
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_tunnel
+    restart: unless-stopped
+    # IMPORTANT: You must add CLOUDFLARE_TOKEN in Portainer's Environment variables section
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
+    networks:
+      - twilio_net
+
+volumes:
+  admin_data:
+
+networks:
+  twilio_net:
+    driver: bridge
