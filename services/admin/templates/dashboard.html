@@ -1,1 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emergency Responder Admin</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .branch-card { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 15px; padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>⚙️ System Configuration</h1>
+    <div id="branches"></div>
 
+    <script>
+        const branches = ['tuc', 'poc', 'rex'];
+
+        async function loadBranches() {
+            const container = document.getElementById('branches');
+            for (const branch of branches) {
+                const res = await fetch(`/api/settings/${branch}`);
+                const data = await res.json();
+                
+                const html = `
+                    <div class="branch-card">
+                        <h2>📍 Branch: ${branch.toUpperCase()}</h2>
+                        <form onsubmit="save('${branch}', event)">
+                            <label>Twilio SID</label>
+                            <input name="sid" value="${data.twilio_sid || ''}" required>
+                            
+                            <label>Twilio Auth Token</label>
+                            <input name="token" value="${data.twilio_token || ''}" type="password" required>
+                            
+                            <label>Twilio Phone Number</label>
+                            <input name="number" value="${data.twilio_number || ''}" placeholder="+1..." required>
+                            
+                            <label>Default Tech Phone</label>
+                            <input name="tech" value="${data.default_tech_phone || ''}" placeholder="+1...">
+                            
+                            <button type="submit">Save Settings</button>
+                        </form>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+        }
+
+        async function save(branch, event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            await fetch(`/api/settings/${branch}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            alert(`Settings saved for ${branch.toUpperCase()}`);
+        }
+
+        loadBranches();
+    </script>
+</body>
+</html>
